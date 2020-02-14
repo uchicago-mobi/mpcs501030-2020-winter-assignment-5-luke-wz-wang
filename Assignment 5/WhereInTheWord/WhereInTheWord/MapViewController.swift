@@ -6,14 +6,22 @@
 //  Copyright © 2020 Luke. All rights reserved.
 //
 
+/*
+ - Attribution: https://programmingwithswift.com/how-to-send-local-notification-with-swift-5/
+ - Attribution: playgrounds from lecture
+ - Attribution: https://developer.apple.com/documentation/swift/dictionary
+ */
+
 import UIKit
 import MapKit
+import CoreLocation
+import UserNotifications
 
 protocol PlacesFavoritesDelegate: class {
   func favoritePlace(name: String) -> Void
 }
 
-class MapViewController: UIViewController {
+class MapViewController: UIViewController, UNUserNotificationCenterDelegate {
     
     
     @IBOutlet weak var mapView: MKMapView!
@@ -26,12 +34,18 @@ class MapViewController: UIViewController {
     
     let locationManager = CLLocationManager()
     
+    let userNotificationCenter = UNUserNotificationCenter.current()
+    
     var placeList = [Place]()
     
     var placeFromData = [Place]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.userNotificationCenter.delegate = self
+        self.requestNotificationAuthorization()
+        
 
         // Do any additional setup after loading the view.
         
@@ -159,6 +173,47 @@ class MapViewController: UIViewController {
         }
     }
     
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        completionHandler()
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.alert, .badge, .sound])
+    }
+    
+    func requestNotificationAuthorization() {
+        let authOptions = UNAuthorizationOptions.init(arrayLiteral: .alert, .badge, .sound)
+        
+        self.userNotificationCenter.requestAuthorization(options: authOptions) { (success, error) in
+            if let error = error {
+                print("Error: ", error)
+            }
+        }
+    }
+
+    func sendNotification() {
+        // Create new notifcation content instance
+        let notificationContent = UNMutableNotificationContent()
+
+        // Add the content to the notification content
+        notificationContent.title = "You entered some location of interest!"
+        notificationContent.body = "It is somehow recommended :)"
+        notificationContent.badge = NSNumber(value: 3)
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.5,
+                                                           repeats: false)
+           let request = UNNotificationRequest(identifier: "testNotification",
+                                               content: notificationContent,
+                                               trigger: trigger)
+           
+           userNotificationCenter.add(request) { (error) in
+               if let error = error {
+                   print("Notification Error: ", error)
+               }
+           }
+
+    }
+    
 
 
 }
@@ -261,12 +316,8 @@ extension MapViewController: CLLocationManagerDelegate {
     // Called when we request state for region
     func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState,for region: CLRegion) {
         if state == CLRegionState.inside {
-           let alert = UIAlertController(title: "You entered some location of interest!", message: "It is somehow recommended :)", preferredStyle: .alert)
-
-            alert.addAction(UIAlertAction(title: "Got it", style: .default, handler: nil))
-           
-
-          self.present(alert, animated: true)
+            self.sendNotification()
+            
         }
     }
 }

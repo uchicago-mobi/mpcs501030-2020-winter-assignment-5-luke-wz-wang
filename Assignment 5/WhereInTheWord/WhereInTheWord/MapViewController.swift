@@ -251,21 +251,16 @@ extension MapViewController: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager,
                          didEnterRegion region: CLRegion) {
-        print("Enter region")
+        
     }
     
     func locationManager(_ manager: CLLocationManager,
                          didExitRegion region: CLRegion) {
-      print("Leaving region")
-      
-      //locationManager.stopMonitoring(for: region)
     }
     
     // Called when we request state for region
     func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState,for region: CLRegion) {
-        //print(" in range!!!")
         if state == CLRegionState.inside {
-          print("We are already in this region")
            let alert = UIAlertController(title: "You entered some location of interest!", message: "It is somehow recommended :)", preferredStyle: .alert)
 
             alert.addAction(UIAlertAction(title: "Got it", style: .default, handler: nil))
